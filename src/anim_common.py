@@ -147,6 +147,18 @@ def text_center(draw, cx, cy, text, f, fill, stroke_fill=None, stroke_width=0):
     draw.text((x, y), text, font=f, fill=fill, stroke_fill=stroke_fill, stroke_width=stroke_width)
 
 
+def text_center_soft(draw, cx, cy, text, f, fill, shadow=(0, 0, 0, 140), offset=3):
+    """Modern caption style -- soft drop shadow instead of a thick comic
+    outline. Reads cleanly over real photography/video."""
+    bbox = draw.textbbox((0, 0), text, font=f)
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
+    x = cx - w / 2 - bbox[0]
+    y = cy - h / 2 - bbox[1]
+    draw.text((x + offset, y + offset), text, font=f, fill=shadow)
+    draw.text((x, y), text, font=f, fill=fill)
+
+
 # --- background -------------------------------------------------------
 
 FLOOR_Y = 560

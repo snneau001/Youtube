@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Synthesizes the soundtrack for the real-footage "Best Friends" edit:
-a continuous original instrumental music bed (procedurally generated,
-not sampled/licensed) plus the existing warm SFX palette layered on
-top, timed to the walking / running / slow-mo highlight / end-card cut.
+"""Synthesizes an upbeat, energetic soundtrack for the real-footage
+"Best Friends" edit: a driving kick/shaker rhythm, punchy bass, and a
+catchy two-phrase lead melody -- all procedurally generated (no
+sampled/licensed audio), tuned brighter and more percussion-driven than
+the earlier chiptune-arpeggio bed.
 
-Usage: python3 audio_realfootage.py <output_dir> <total_duration> <walk_end> <run_end> <chase_end>
+Usage: python3 audio_realfootage.py <output_dir> <total_duration> <segB_start> <segC_start> <segD_start>
 """
 import os
 import sys
@@ -12,83 +13,101 @@ import sys
 import numpy as np
 from scipy.io import wavfile
 
-from audio import SR, mix_at, tone, sfx_twinkle, sfx_bark, sfx_meow, sfx_outro_jingle, sfx_whoosh
-from audio_bff import sfx_purr
+from audio import SR, mix_at, tone, noise_burst
 
-# A-major pentatonic-ish scale (semitone offsets from root) -- cheerful,
-# consonant, and generic enough to never resemble any specific melody.
-ARPEGGIO_STEPS = [0, 4, 7, 12, 7, 4]
+# A-major-ish scale degrees (semitones from root) for the lead melody.
+PHRASE_1 = [0, 3, 5, 7, 5, 3]
+PHRASE_2 = [7, 10, 12, 10, 7, 5]
 
 
-def _note_freq(root, semitones):
+def _freq(root, semitones):
     return root * (2 ** (semitones / 12))
 
 
-def music_bed(duration, root=220.0, bpm=104, vol=0.13):
-    """A simple, fully-original looping instrumental: plucky triangle-wave
-    arpeggio over a soft sine bass pulse. No sampled or licensed audio."""
+def _kick(vol=0.3):
+    return tone(90, 0.12, shape="sine", vol=vol, decay=True)
+
+
+def _shaker(vol=0.09):
+    return noise_burst(0.05, vol=vol, lowpass=6000)
+
+
+def _bass_note(freq, dur, vol=0.16):
+    return tone(freq, dur, shape="triangle", vol=vol, decay=True)
+
+
+def _lead_note(freq, dur, vol=0.15):
+    return tone(freq, dur, shape="triangle", vol=vol, vibrato=0.01, decay=True)
+
+
+def rhythm_bed(duration, root=196.0, bpm=124, energy_start=0.0):
+    """Kick+shaker+bass groove. `energy_start` -- time (s) at which the
+    shaker layer joins, so the track can build over the edit."""
     track = np.zeros(int(SR * duration) + SR)
     beat = 60.0 / bpm
-    step_dur = beat / 2
 
     t = 0.0
-    i = 0
+    beat_i = 0
     while t < duration:
-        semitone = ARPEGGIO_STEPS[i % len(ARPEGGIO_STEPS)]
-        freq = _note_freq(root * 2, semitone)
-        note = tone(freq, step_dur * 0.92, shape="triangle", vol=vol, decay=True)
-        mix_at(track, note, t)
-        i += 1
-        t += step_dur
+        mix_at(track, _kick(0.26), t)
+        if t >= energy_start:
+            mix_at(track, _shaker(0.09), t + beat / 2)
+        beat_i += 1
+        t += beat
 
-    t = 0.0
     bar = beat * 4
+    t = 0.0
     j = 0
+    bass_pattern = [0, 0, 7, 5]
     while t < duration:
-        bass_freq = root if j % 2 == 0 else _note_freq(root, 7)
-        note = tone(bass_freq, bar * 0.9, shape="sine", vol=vol * 0.8, decay=True)
-        mix_at(track, note, t)
+        freq = _freq(root, bass_pattern[j % len(bass_pattern)])
+        mix_at(track, _bass_note(freq, bar * 0.85, vol=0.17), t)
         j += 1
         t += bar
 
     return track[: int(SR * duration)]
 
 
-def build_soundtrack(total_duration, walk_end, run_end, chase_end):
+def lead_melody(duration, root=392.0, bpm=124, start=0.0):
+    track = np.zeros(int(SR * duration) + SR)
+    beat = 60.0 / bpm
+    note_dur = beat / 2
+    t = start
+    i = 0
+    phrases = PHRASE_1 + PHRASE_2
+    while t < duration:
+        semitone = phrases[i % len(phrases)]
+        freq = _freq(root, semitone)
+        mix_at(track, _lead_note(freq, note_dur * 0.9, vol=0.14), t)
+        i += 1
+        t += note_dur
+    return track[: int(SR * duration)]
+
+
+def build_soundtrack(total_duration, segB_start, segC_start, segD_start):
     track = np.zeros(int(SR * total_duration) + SR)
 
-    # continuous original music bed under the whole video
-    bed = music_bed(total_duration)
-    mix_at(track, bed, 0.0)
+    mix_at(track, rhythm_bed(total_duration, energy_start=segB_start), 0.0)
+    mix_at(track, lead_melody(segD_start, start=0.3), 0.0)
 
-    # walking
-    mix_at(track, sfx_twinkle(0.2), 0.1)
-    mix_at(track, sfx_bark(0.12), max(0.3, walk_end - 0.6))
-
-    # running -- energetic whoosh as the pace picks up
-    mix_at(track, sfx_whoosh(0.22), walk_end + 0.05)
-    mix_at(track, sfx_meow(0.1) if False else sfx_bark(0.1), (walk_end + run_end) / 2)
-
-    # slow-mo highlight -- gentle purr under the held moment
-    mix_at(track, sfx_purr(0.09, dur=max(0.5, chase_end - run_end)), run_end + 0.1)
-
-    # end card
-    mix_at(track, sfx_outro_jingle(0.24), chase_end + 0.3)
+    # a little swell into the energetic segment, then ease for the slow-mo
+    # highlight by simply letting the rhythm carry (lead melody stops at
+    # segD_start so the highlight breathes under bass+kick only)
 
     track = track[: int(SR * total_duration)]
     peak = np.max(np.abs(track)) or 1.0
-    track = track / peak * 0.85
+    track = track / peak * 0.88
     return track
 
 
 def main():
     out_dir = sys.argv[1] if len(sys.argv) > 1 else "build/realfootage"
-    total_duration = float(sys.argv[2]) if len(sys.argv) > 2 else 13.4
-    walk_end = float(sys.argv[3]) if len(sys.argv) > 3 else 1.9
-    run_end = float(sys.argv[4]) if len(sys.argv) > 4 else 4.0
-    chase_end = float(sys.argv[5]) if len(sys.argv) > 5 else 10.3
+    total_duration = float(sys.argv[2]) if len(sys.argv) > 2 else 12.0
+    segB_start = float(sys.argv[3]) if len(sys.argv) > 3 else 2.5
+    segC_start = float(sys.argv[4]) if len(sys.argv) > 4 else 5.0
+    segD_start = float(sys.argv[5]) if len(sys.argv) > 5 else 9.5
     os.makedirs(out_dir, exist_ok=True)
-    track = build_soundtrack(total_duration, walk_end, run_end, chase_end)
+    track = build_soundtrack(total_duration, segB_start, segC_start, segD_start)
     pcm = (track * 32767).astype(np.int16)
     out_path = os.path.join(out_dir, "soundtrack_realfootage.wav")
     wavfile.write(out_path, SR, pcm)

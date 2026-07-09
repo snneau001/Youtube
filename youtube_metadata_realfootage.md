@@ -1,19 +1,30 @@
 # YouTube Upload Package — "Best Friends on a Walk" (real footage)
 
-File: `out/best_friends_on_a_walk.mp4` (1080x1920, 30fps, ~9.2s, H.264/AAC — vertical Short)
+File: `out/best_friends_on_a_walk.mp4` (1080x1920, 30fps, ~9.3s, H.264/AAC — vertical Short)
 Source clip: `footage/clip01_three_dogs_field.mp4` (user-provided/licensed
 stock footage — not committed to git; keep a local copy to rebuild)
 
-Edit structure: "WALKING" at normal speed → "...THEN RUNNING!" sped up
-1.35x → "BEST OF FRIENDS" slow-motion (2.2x) punch-in highlight of their
-most dynamic moment → branded end card. Scored with a continuous
-original instrumental music bed (procedurally synthesized, not
-licensed) plus layered SFX.
+Edit structure: normal-speed establishing shot with a single clean
+"Best Friends" title (soft-shadow caption, not a comic outline) →
+mildly sped-up (1.25x), tighter-framed pass for energy → a genuinely
+smooth, motion-interpolated slow-motion highlight (ffmpeg `minterpolate`,
+not just frame-holding) of the most dynamic moment → branded end card
+composited over a blurred frame from the footage. All four segments
+crossfade together. Scored with an upbeat, percussion-driven original
+soundtrack (kick/shaker rhythm + bass + lead melody, procedurally
+synthesized, not licensed).
 
-Note: this source clip shows the dogs moving together, not one
-actually pursuing another — there's no true "chasing" behavior in the
-footage. The slow-mo highlight is the closest substitute. For a video
-that actually shows chasing, a clip depicting real pursuit is needed.
+No "running" or "chasing" claims in the on-screen text — the source
+clip shows the dogs moving together, not one pursuing another. The
+speed/slow-mo variety is presented as stylistic editing, not a claim
+about what the dogs are doing. For a video that actually shows chasing,
+a clip depicting real pursuit is needed.
+
+Revision notes: an earlier cut used a horizontal-flip on the energetic
+segment for visual variety, but that broke the crossfade into a
+kaleidoscope/ghosting artifact (flipped content blended against normal
+orientation). Fixed by using a tighter crop for variety instead of a
+flip, which keeps spatial continuity across the fades.
 
 ## Title options
 1. Best Friends on a Walk 🐾 #Shorts
