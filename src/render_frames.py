@@ -57,7 +57,7 @@ def get_frame(t):
 
     tx, ty = draw_background(draw, shake=shake)  # plant pot anchor near table
 
-    dog = dict(cx=-200, cy=STAND_Y, scale=1.0, facing=1, leg_phase=0, mouth_open=0,
+    dog = dict(cx=-200, cy=STAND_Y, scale=1.3, facing=1, leg_phase=0, mouth_open=0,
                tilt=0, tail_wag=0, dazed=False, panting=False, stretch=0)
     cat = dict(cx=RUG_CX + 70, cy=STAND_Y, scale=1.0, facing=-1, leg_phase=0, tilt=0,
                tail_flick=0, dazed=False, panting=False, stretch=0, smug=True)

@@ -91,60 +91,77 @@ def draw_dog(draw, cx, cy, scale=1.0, facing=1, leg_phase=0.0, mouth_open=0.0,
 def draw_cat(draw, cx, cy, scale=1.0, facing=1, leg_phase=0.0, tilt=0.0,
              squash=1.0, tail_flick=0.0, dazed=False, panting=False,
              stretch=0.0, smug=False):
-    """Draw Whiskers the cat centered near (cx, cy)."""
+    """Draw Whiskers the cat centered near (cx, cy) -- chibi proportions
+    (oversized head, small body, big sparkly eyes) for extra cuteness."""
     s = scale
-    body_w, body_h = (120 + 60 * stretch) * s, 62 * s * (1.0 / (1 + stretch * 0.3))
-    bx = cx - facing * stretch * 34 * s
+    body_w, body_h = (100 + 50 * stretch) * s, 54 * s * (1.0 / (1 + stretch * 0.3))
+    bx = cx - facing * stretch * 30 * s
 
     # paws (2, front + back, alternating bounce)
-    paw_y = cy + body_h * 0.48
-    _paw(draw, bx - body_w * 0.24, paw_y, leg_phase, CAT_FUR_DARK, 11 * s)
-    _paw(draw, bx + body_w * 0.22, paw_y, leg_phase + math.pi, CAT_FUR_DARK, 11 * s)
+    paw_y = cy + body_h * 0.5
+    _paw(draw, bx - body_w * 0.22, paw_y, leg_phase, CAT_FUR_DARK, 11 * s)
+    _paw(draw, bx + body_w * 0.20, paw_y, leg_phase + math.pi, CAT_FUR_DARK, 11 * s)
 
-    # tail (long, curved, flicking)
+    # tail (long, curved, flicking, fluffy tip)
     tbx = bx - facing * body_w * 0.5
     tby = cy
     flick = math.sin(tail_flick) * 34
-    draw_taper(draw, tbx, tby, tbx - facing * 34 * s, tby - 70 * s + flick, 11 * s, 5 * s, CAT_FUR)
+    tip_x, tip_y = tbx - facing * 34 * s, tby - 70 * s + flick
+    draw_taper(draw, tbx, tby, tip_x, tip_y, 12 * s, 6 * s, CAT_FUR)
+    draw.ellipse([tip_x - 10 * s, tip_y - 10 * s, tip_x + 10 * s, tip_y + 10 * s], fill=CAT_FUR)
 
     draw.ellipse([bx - body_w / 2, cy - body_h / 2, bx + body_w / 2, cy + body_h / 2], fill=CAT_FUR)
     for dx in (-0.25, 0.05, 0.32):
-        draw.arc([bx + body_w * dx - 14 * s, cy - body_h * 0.4, bx + body_w * dx + 14 * s, cy + body_h * 0.4], 20, 160, fill=CAT_STRIPE, width=int(4 * s))
+        draw.arc([bx + body_w * dx - 12 * s, cy - body_h * 0.4, bx + body_w * dx + 12 * s, cy + body_h * 0.4], 20, 160, fill=CAT_STRIPE, width=int(3 * s))
 
-    hx = bx + facing * body_w * 0.46
-    hy = cy - body_h * 0.55 + math.sin(tilt) * 4
-    head_r = 42 * s
-    draw.ellipse([hx - head_r, hy - head_r, hx + head_r, hy + head_r], fill=CAT_FUR)
+    hx = bx + facing * body_w * 0.42
+    hy = cy - body_h * 0.62 + math.sin(tilt) * 4
+    head_r = 54 * s  # oversized chibi head
 
     for side in (-1, 1):
-        ex = hx + side * head_r * 0.62
-        ey = hy - head_r * 0.85
-        draw.polygon([(ex - 16 * s, ey + 14 * s), (ex + 16 * s, ey + 14 * s), (ex, ey - 20 * s)], fill=CAT_FUR)
-        draw.polygon([(ex - 8 * s, ey + 8 * s), (ex + 8 * s, ey + 8 * s), (ex, ey - 8 * s)], fill=(230, 190, 200))
+        ex = hx + side * head_r * 0.68
+        ey = hy - head_r * 0.8
+        draw.polygon([(ex - 17 * s, ey + 15 * s), (ex + 17 * s, ey + 15 * s), (ex, ey - 20 * s)], fill=CAT_FUR)
+        draw.polygon([(ex - 9 * s, ey + 9 * s), (ex + 9 * s, ey + 9 * s), (ex, ey - 8 * s)], fill=(245, 200, 210))
 
-    sx = hx + facing * head_r * 0.55
-    sy = hy + head_r * 0.35
+    draw.ellipse([hx - head_r, hy - head_r, hx + head_r, hy + head_r], fill=CAT_FUR)
+    # fluffy cheek tufts
+    for sign in (-1, 1):
+        cxx = hx + sign * head_r * 0.92
+        draw.ellipse([cxx - 12 * s, hy + head_r * 0.15 - 12 * s, cxx + 12 * s, hy + head_r * 0.15 + 12 * s], fill=CAT_FUR)
+
+    sx = hx + facing * head_r * 0.5
+    sy = hy + head_r * 0.4
     for w_ in (-1, 1):
-        wy = sy + w_ * 8 * s
-        draw.line([(sx, wy), (sx + facing * 30 * s, wy - w_ * 6 * s)], fill=(230, 230, 230, 200), width=2)
+        wy = sy + w_ * 7 * s
+        draw.line([(sx, wy), (sx + facing * 32 * s, wy - w_ * 8 * s)], fill=(255, 255, 255, 210), width=2)
+
+    # blush
+    for sign in (-1, 1):
+        bxx = hx + sign * head_r * 0.62
+        byy = hy + head_r * 0.32
+        draw.ellipse([bxx - 11 * s, byy - 7 * s, bxx + 11 * s, byy + 7 * s], fill=(255, 150, 160, 110))
 
     eye_y = hy - head_r * 0.05
     if dazed:
         for sign in (-1, 1):
-            ex = hx + sign * head_r * 0.4
+            ex = hx + sign * head_r * 0.36
             draw.line([(ex - 7 * s, eye_y - 7 * s), (ex + 7 * s, eye_y + 7 * s)], fill=INK, width=int(3 * s))
             draw.line([(ex - 7 * s, eye_y + 7 * s), (ex + 7 * s, eye_y - 7 * s)], fill=INK, width=int(3 * s))
     elif smug:
         for sign in (-1, 1):
-            ex = hx + sign * head_r * 0.4
-            draw.line([(ex - 8 * s, eye_y), (ex + 8 * s, eye_y)], fill=INK, width=int(4 * s))
+            ex = hx + sign * head_r * 0.36
+            draw.arc([ex - 9 * s, eye_y - 6 * s, ex + 9 * s, eye_y + 9 * s], 20, 160, fill=INK, width=int(4 * s))
     else:
         for sign in (-1, 1):
-            ex = hx + sign * head_r * 0.4
-            draw.ellipse([ex - 7 * s, eye_y - 9 * s, ex + 7 * s, eye_y + 9 * s], fill=WHITE, outline=INK)
-            draw.ellipse([ex - 2.5 * s, eye_y - 6 * s, ex + 2.5 * s, eye_y + 6 * s], fill=(60, 160, 90))
+            ex = hx + sign * head_r * 0.36
+            draw.ellipse([ex - 11 * s, eye_y - 13 * s, ex + 11 * s, eye_y + 13 * s], fill=WHITE, outline=INK, width=2)
+            draw.ellipse([ex - 6.5 * s, eye_y - 8 * s, ex + 6.5 * s, eye_y + 9 * s], fill=(90, 190, 110))
+            draw.ellipse([ex - 3.5 * s, eye_y - 5 * s, ex + 3.5 * s, eye_y + 5 * s], fill=BLACK)
+            # sparkle highlight
+            draw.ellipse([ex - 4 * s, eye_y - 10 * s, ex + 0.5 * s, eye_y - 6 * s], fill=WHITE)
 
-    draw.polygon([(sx + facing * 10 * s, sy - 4 * s), (sx + facing * 10 * s, sy + 4 * s), (sx + facing * 18 * s, sy)], fill=(230, 130, 150))
+    draw.polygon([(sx + facing * 9 * s, sy - 5 * s), (sx + facing * 9 * s, sy + 5 * s), (sx + facing * 17 * s, sy)], fill=(235, 140, 160))
 
     if panting:
         ellipse_safe(draw, sx + facing * 4 * s, sy + 4 * s, sx + facing * 14 * s, sy + 20 * s, fill=(232, 140, 150))
