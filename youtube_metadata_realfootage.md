@@ -1,12 +1,19 @@
 # YouTube Upload Package — "Best Friends on a Walk" (real footage)
 
-File: `out/best_friends_on_a_walk.mp4` (1080x1920, 30fps, ~10.9s, H.264/AAC — vertical Short)
+File: `out/best_friends_on_a_walk.mp4` (1080x1920, 30fps, ~9.2s, H.264/AAC — vertical Short)
 Source clip: `footage/clip01_three_dogs_field.mp4` (user-provided/licensed
 stock footage — not committed to git; keep a local copy to rebuild)
 
-Edit structure: normal-speed open with branded title overlay (4.9s) →
-2x slow-motion punch-in replay of the highlight (5.0s) → branded end
-card (3.5s), scored with an original synthesized soundtrack.
+Edit structure: "WALKING" at normal speed → "...THEN RUNNING!" sped up
+1.35x → "BEST OF FRIENDS" slow-motion (2.2x) punch-in highlight of their
+most dynamic moment → branded end card. Scored with a continuous
+original instrumental music bed (procedurally synthesized, not
+licensed) plus layered SFX.
+
+Note: this source clip shows the dogs moving together, not one
+actually pursuing another — there's no true "chasing" behavior in the
+footage. The slow-mo highlight is the closest substitute. For a video
+that actually shows chasing, a clip depicting real pursuit is needed.
 
 ## Title options
 1. Best Friends on a Walk 🐾 #Shorts
