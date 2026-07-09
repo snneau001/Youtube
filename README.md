@@ -28,11 +28,23 @@ then heading inside to share a bowl of food together.
 - **YouTube title/description/tags:** `youtube_metadata_bff.md`
 - **Rebuild:** `./build_bff.sh`
 
+## 3. "Dog & Cat: Best Friends" — YouTube Short (26.5s, vertical)
+
+A hook-first, vertically-reframed cut of the Best Friends video, built
+for the YouTube Shorts feed: action starts at frame 0 (no static title
+card), tighter scene pacing, 1080x1920.
+
+- **Final video:** `out/dog_cat_best_friends_short.mp4` (1080x1920, 24fps, H.264/AAC)
+- **Thumbnail:** `assets/thumbnail_shorts.png`
+- **YouTube title/description/tags:** `youtube_metadata_shorts.md`
+- **Rebuild:** `./build_shorts.sh`
+
 ## Rebuild from source
 
 ```bash
-./build.sh        # Funny Fights
-./build_bff.sh    # Best Friends
+./build.sh          # Funny Fights
+./build_bff.sh      # Best Friends (landscape)
+./build_shorts.sh   # Best Friends (vertical Short)
 ```
 
 Each script renders the animation frames, synthesizes the soundtrack,
@@ -49,13 +61,17 @@ src/anim_common.py          shared constants, easing helpers, drawing primitives
 src/characters.py           procedural Rex (dog) / Whiskers (cat) rigs --
                              color-overridable so both videos share one rig
 src/render_frames.py        Funny Fights timeline -> PNG frame sequence
-src/render_frames_bff.py    Best Friends timeline -> PNG frame sequence
+src/render_frames_bff.py    Best Friends (landscape) timeline -> PNG frame sequence
+src/render_frames_shorts.py Best Friends (vertical Short) timeline -> PNG frame sequence
 src/audio.py                Funny Fights SFX + jingles -> soundtrack.wav
 src/audio_bff.py            Best Friends SFX + jingles (reuses audio.py's
                              synth primitives) -> soundtrack_bff.wav
+src/audio_shorts.py         Shorts cut SFX (reuses audio.py/audio_bff.py) -> soundtrack_shorts.wav
 src/thumbnail.py            Funny Fights thumbnail generator
-src/thumbnail_bff.py        Best Friends thumbnail generator
-build.sh / build_bff.sh     orchestrate each render -> video pipeline
+src/thumbnail_bff.py        Best Friends (landscape) thumbnail generator
+src/thumbnail_shorts.py     Best Friends (vertical) thumbnail generator
+build.sh / build_bff.sh /   orchestrate each render -> video pipeline
+build_shorts.sh
 out/                        final rendered MP4s
 assets/                     thumbnails
 ```

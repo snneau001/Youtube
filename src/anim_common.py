@@ -11,6 +11,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 WIDTH, HEIGHT = 1280, 720
 FPS = 24
+
+# Vertical (9:16) canvas for YouTube Shorts cuts
+SHORT_WIDTH, SHORT_HEIGHT = 1080, 1920
 FONT_DIR = "/mnt/skills/examples/canvas-design/canvas-fonts"
 TITLE_FONT_PATH = f"{FONT_DIR}/BigShoulders-Bold.ttf"
 BODY_FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
@@ -185,6 +188,81 @@ def draw_background(draw, shake=(0, 0)):
         draw.rounded_rectangle([lx, cy0 + 70, lx + 80, cy0 + 150], radius=18, fill=COUCH, outline=COUCH_DARK, width=3)
 
     return tx + 60, ty  # returns plant pot anchor point
+
+
+FLOOR_Y_V = 1360  # vertical (Shorts) living room floor line
+
+
+def draw_background_vertical(draw, shake=(0, 0)):
+    """Vertical (1080x1920) living room -- same elements as draw_background,
+    reflowed for a 9:16 Shorts canvas."""
+    sx, sy = shake
+    W, H = SHORT_WIDTH, SHORT_HEIGHT
+    draw.rectangle([0, 0, W, H], fill=WALL)
+    draw.rectangle([0, FLOOR_Y_V, W, H], fill=FLOOR)
+    draw.rectangle([0, FLOOR_Y_V - 6, W, FLOOR_Y_V], fill=WALL_TRIM)
+
+    wx, wy = W * 0.5 - 110 + sx, 110 + sy
+    draw.rounded_rectangle([wx, wy, wx + 220, wy + 240], radius=16, fill=WINDOW_SKY, outline=WALL_TRIM, width=9)
+    draw.line([wx + 110, wy, wx + 110, wy + 240], fill=WALL_TRIM, width=9)
+    draw.line([wx, wy + 120, wx + 220, wy + 120], fill=WALL_TRIM, width=9)
+    draw.ellipse([wx + 142, wy + 34, wx + 186, wy + 78], fill=(255, 244, 214))
+
+    cxr, cyr = W * 0.5 + sx, FLOOR_Y_V + 220 + sy
+    draw.ellipse([cxr - 420, cyr - 190, cxr + 420, cyr + 190], fill=RUG)
+    draw.ellipse([cxr - 420, cyr - 190, cxr + 420, cyr + 190], outline=RUG_DARK, width=7)
+    draw.ellipse([cxr - 300, cyr - 120, cxr + 300, cyr + 120], outline=RUG_DARK, width=5)
+
+    tx, ty = 40 + sx, FLOOR_Y_V - 80 + sy
+    draw.rectangle([tx, ty, tx + 130, ty + 20], fill=TABLE)
+    draw.rectangle([tx + 12, ty + 20, tx + 28, ty + 88], fill=TABLE)
+    draw.rectangle([tx + 102, ty + 20, tx + 118, ty + 88], fill=TABLE)
+
+    cx0, cy0 = W - 300 + sx, FLOOR_Y_V - 170 + sy
+    draw.rounded_rectangle([cx0, cy0, cx0 + 300, cy0 + 210], radius=28, fill=COUCH)
+    draw.rounded_rectangle([cx0, cy0, cx0 + 300, cy0 + 66], radius=24, fill=COUCH_DARK)
+    draw.rounded_rectangle([cx0 - 18, cy0 + 34, cx0 + 30, cy0 + 210], radius=22, fill=COUCH_DARK)
+    draw.rounded_rectangle([cx0 + 268, cy0 + 34, cx0 + 316, cy0 + 210], radius=22, fill=COUCH_DARK)
+    for i in range(3):
+        lx = cx0 + 34 + i * 90
+        draw.rounded_rectangle([lx, cy0 + 78, lx + 76, cy0 + 168], radius=18, fill=COUCH, outline=COUCH_DARK, width=3)
+
+    return tx + 65, ty
+
+
+def draw_yard_background_vertical(draw, shake=(0, 0)):
+    """Vertical (1080x1920) yard scene -- reflowed for a 9:16 Shorts canvas."""
+    sx, sy = shake
+    W, H = SHORT_WIDTH, SHORT_HEIGHT
+    horizon = 620
+    for i in range(horizon):
+        t = i / horizon
+        c = tuple(int(lerp(a, b, t)) for a, b in zip(YARD_SKY_TOP, YARD_SKY_BOTTOM))
+        draw.line([(0, i), (W, i)], fill=c)
+    draw.ellipse([W - 220 + sx, 70 + sy, W - 100 + sx, 190 + sy], fill=SUN)
+
+    draw.rectangle([0, horizon, W, H], fill=GRASS)
+    for gx in range(-20, W + 20, 44):
+        gy = horizon + 30 + 20 * math.sin(gx * 0.05)
+        draw.line([(gx + sx, gy + sy), (gx + sx - 9, gy - 24 + sy)], fill=GRASS_DARK, width=5)
+
+    for fx in range(-10, W + 40, 68):
+        draw.rounded_rectangle([fx + sx, horizon - 76 + sy, fx + 24 + sx, horizon + 22 + sy], radius=7, fill=FENCE, outline=FENCE_DARK, width=3)
+    draw.rectangle([0 + sx, horizon - 48 + sy, W + sx, horizon - 32 + sy], fill=FENCE_DARK)
+
+    tx, ty = 190 + sx, horizon + sy
+    draw.rectangle([tx - 18, ty - 100, tx + 18, ty + 12], fill=TREE_TRUNK)
+    for dx, dy, r in [(-42, -168, 70), (34, -180, 76), (0, -214, 66), (-12, -136, 56)]:
+        draw.ellipse([tx + dx - r, ty + dy - r, tx + dx + r, ty + dy + r], fill=TREE_LEAVES)
+    draw.ellipse([tx - 22 - 44, ty - 146 - 44, tx - 22 + 44, ty - 146 + 44], fill=TREE_LEAVES_DARK)
+
+    hx, hy = W - 220 + sx, horizon + 340 + sy
+    for i in range(5):
+        r = 38
+        draw.ellipse([hx + i * 34 - r, hy - r, hx + i * 34 + r, hy + r * 0.7], fill=TREE_LEAVES)
+    draw.ellipse([hx + 64 - 32, hy - 36, hx + 64 + 32, hy + 22], fill=TREE_LEAVES_DARK)
+
+    return hx + 64, hy - 42
 
 
 def draw_plant_pot(draw, x, y, tilt=0.0, on_head=False, scale=1.0):
