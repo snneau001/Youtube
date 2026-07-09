@@ -10,6 +10,7 @@ import sys
 from anim_common import (
     WIDTH, HEIGHT, FPS, new_canvas, draw_background, draw_plant_pot,
     draw_stars, draw_speed_lines, draw_dust_cloud, draw_squeak, draw_paw_print,
+    draw_swirl_cloud, draw_impact_burst, jump_lift,
     text_center, font, TITLE_FONT_PATH, BODY_FONT_PATH,
     ease_out_back, ease_in_out, ease_out_bounce, scene_t, lerp, clamp01,
     INK, WHITE, BLACK,
@@ -36,19 +37,23 @@ TABLE_X, TABLE_Y = 230, 630
 TITLE_FONT = None
 SUB_FONT = None
 BODY_FONT = None
+BURST_FONT = None
+
+BURST_WORDS = ["POW!", "BAM!", "HISS!", "YIP!", "WHAP!", "BAM!", "POW!"]
 
 
 def _fonts():
-    global TITLE_FONT, SUB_FONT, BODY_FONT
+    global TITLE_FONT, SUB_FONT, BODY_FONT, BURST_FONT
     if TITLE_FONT is None:
         TITLE_FONT = font(TITLE_FONT_PATH, 92)
         SUB_FONT = font(TITLE_FONT_PATH, 40)
         BODY_FONT = font(BODY_FONT_PATH, 30)
-    return TITLE_FONT, SUB_FONT, BODY_FONT
+        BURST_FONT = font(TITLE_FONT_PATH, 30)
+    return TITLE_FONT, SUB_FONT, BODY_FONT, BURST_FONT
 
 
 def get_frame(t):
-    title_font, sub_font, body_font = _fonts()
+    title_font, sub_font, body_font, burst_font = _fonts()
     img, draw = new_canvas()
 
     shake = (0, 0)
@@ -58,9 +63,9 @@ def get_frame(t):
     tx, ty = draw_background(draw, shake=shake)  # plant pot anchor near table
 
     dog = dict(cx=-200, cy=STAND_Y, scale=1.3, facing=1, leg_phase=0, mouth_open=0,
-               tilt=0, tail_wag=0, dazed=False, panting=False, stretch=0)
+               tilt=0, tail_wag=0, dazed=False, panting=False, stretch=0, squash=1.0)
     cat = dict(cx=RUG_CX + 70, cy=STAND_Y, scale=1.0, facing=-1, leg_phase=0, tilt=0,
-               tail_flick=0, dazed=False, panting=False, stretch=0, smug=True)
+               tail_flick=0, dazed=False, panting=False, stretch=0, smug=True, squash=1.0)
     toy = None  # (x1,y1,x2,y2) or None
     plant_on_table = True
     plant_tilt = 0.0
@@ -99,6 +104,18 @@ def get_frame(t):
         cat['cx'] = lerp(RUG_CX + 40, 780, e)
         cat['leg_phase'] = t * 22
         cat['smug'] = False
+
+        # two leaping bounds toward the toy, then a short final skid
+        n_jumps = 2
+        run_frac = clamp01(lt / 0.85)
+        jump_phase = run_frac * n_jumps
+        local = jump_phase - math.floor(jump_phase)
+        airborne = math.sin(math.pi * local) if lt < 0.85 else 0.0
+        dog['cy'] = STAND_Y - jump_lift(local, 46 * dog['scale']) if lt < 0.85 else STAND_Y
+        cat['cy'] = STAND_Y - jump_lift(local, 40 * cat['scale']) if lt < 0.85 else STAND_Y
+        dog['squash'] = lerp(0.84, 1.16, airborne)
+        cat['squash'] = lerp(0.86, 1.14, airborne)
+
         if lt < 0.85:
             draw_dust_cloud(draw, dog['cx'] - 60, STAND_Y + 40, t)
             draw_speed_lines(draw, dog['cx'] - 70, STAND_Y - 10, 1)
@@ -154,25 +171,61 @@ def get_frame(t):
         extra_fx.append(('stars_cat', cat['cx'], STAND_Y - 80, t))
 
     elif t < T_CHASE[1]:
+        # Round two: Whiskers pounces, both leap into a swirling scuffle,
+        # then burst apart dizzy.
         lt = scene_t(t, *T_CHASE)
-        lane_lo, lane_hi = 300, 980
-        phase = lt * 2 * math.pi * 3
-        pos = (math.sin(phase - math.pi / 2) + 1) / 2  # 0..1..0 sweeps
-        lead_x = lerp(lane_lo, lane_hi, pos)
-        vel = math.cos(phase - math.pi / 2)
-        facing = 1 if vel >= 0 else -1
-        dog['cx'] = lead_x
-        dog['facing'] = facing
-        dog['leg_phase'] = t * 26
-        dog['tail_wag'] = t * 14
-        cat['cx'] = lead_x - facing * 100
-        cat['facing'] = facing
-        cat['leg_phase'] = t * 26
-        cat['tail_flick'] = t * 10
-        cat['smug'] = False
-        draw_dust_cloud(draw, dog['cx'] - facing * 50, STAND_Y + 40, t)
-        draw_speed_lines(draw, dog['cx'] - facing * 55, STAND_Y - 10, facing)
-        draw_speed_lines(draw, cat['cx'] - facing * 55, STAND_Y - 10, facing)
+        pounce_end, brawl_end = 0.18, 0.86
+        center_x = RUG_CX
+
+        if lt < pounce_end:
+            e = ease_in_out(lt / pounce_end)
+            dog['cx'] = lerp(COUCH_X - 60, center_x + 40, e)
+            cat['cx'] = lerp(TABLE_X + 60, center_x - 40, e)
+            arc = math.sin(math.pi * e)
+            dog['cy'] = STAND_Y - jump_lift(e, 95 * dog['scale'])
+            cat['cy'] = STAND_Y - jump_lift(e, 75 * cat['scale'])
+            dog['squash'] = lerp(0.85, 1.22, arc)
+            cat['squash'] = lerp(0.85, 1.22, arc)
+            dog['facing'] = -1
+            cat['facing'] = 1
+            dog['mouth_open'] = 0.6
+            dog['leg_phase'] = t * 10
+            cat['leg_phase'] = t * 10
+
+        elif lt < brawl_end:
+            dog['cx'] = center_x + 40 + 16 * math.sin(t * 19.0)
+            cat['cx'] = center_x - 44 + 18 * math.sin(t * 23.0 + 1.3)
+            dog['cy'] = STAND_Y - 8 + 10 * math.sin(t * 27.0 + 0.5)
+            cat['cy'] = STAND_Y - 6 + 9 * math.sin(t * 31.0 + 2.1)
+            dog['facing'] = 1 if math.sin(t * 19.0) > 0 else -1
+            cat['facing'] = 1 if math.sin(t * 23.0 + 1.3) > 0 else -1
+            dog['leg_phase'] = t * 40
+            cat['leg_phase'] = t * 40
+            dog['mouth_open'] = 0.5
+            dog['tail_wag'] = t * 24
+            cat['tail_flick'] = t * 24
+            cat['smug'] = False
+            extra_fx.append(('brawl_cloud', center_x, STAND_Y - 20, t))
+
+            for i, (btime, dx, dy) in enumerate([
+                (0.28, -30, -70), (0.37, 40, -55), (0.47, -50, -35),
+                (0.56, 35, -75), (0.65, -25, -50), (0.74, 45, -60), (0.82, -35, -40),
+            ]):
+                bt = t - (T_CHASE[0] + btime * (T_CHASE[1] - T_CHASE[0]))
+                if 0 <= bt < 0.3:
+                    burst_scale = math.sin(math.pi * bt / 0.3)
+                    extra_fx.append(('burst', center_x + dx, STAND_Y - 30 + dy, BURST_WORDS[i % len(BURST_WORDS)], burst_scale))
+
+        else:
+            e = ease_out_back(scene_t(lt, brawl_end, 1.0))
+            dog['cx'] = lerp(center_x + 40, 560, e)
+            cat['cx'] = lerp(center_x - 44, 780, e)
+            dog['cy'] = STAND_Y
+            cat['cy'] = STAND_Y
+            dog['dazed'] = True
+            cat['dazed'] = True
+            dog['facing'] = 1
+            cat['facing'] = -1
 
     elif t < T_DRAW[1]:
         lt = scene_t(t, *T_DRAW)
@@ -211,12 +264,14 @@ def get_frame(t):
     draw_dog(draw, dog['cx'] + shake[0], dog_cy + shake[1],
              scale=dog.get('scale', 1.0), facing=dog['facing'], leg_phase=dog['leg_phase'],
              mouth_open=dog['mouth_open'], tilt=dog['tilt'], tail_wag=dog['tail_wag'],
-             dazed=dog['dazed'], panting=dog['panting'], stretch=dog['stretch'])
+             dazed=dog['dazed'], panting=dog['panting'], stretch=dog['stretch'],
+             squash=dog.get('squash', 1.0))
 
     draw_cat(draw, cat['cx'] + shake[0], cat_cy + shake[1],
              scale=cat.get('scale', 1.0), facing=cat['facing'], leg_phase=cat['leg_phase'],
              tilt=cat['tilt'], tail_flick=cat['tail_flick'], dazed=cat['dazed'],
-             panting=cat['panting'], stretch=cat['stretch'], smug=cat['smug'])
+             panting=cat['panting'], stretch=cat['stretch'], smug=cat['smug'],
+             squash=cat.get('squash', 1.0))
 
     if toy is not None:
         x1, y1, x2, y2 = toy
@@ -235,6 +290,15 @@ def get_frame(t):
             draw_stars(draw, fx[1], fx[2], fx[3])
         elif fx[0] == 'stars_cat':
             draw_stars(draw, fx[1], fx[2], fx[3])
+        elif fx[0] == 'brawl_cloud':
+            _, ccx, ccy, ct = fx
+            draw_swirl_cloud(draw, ccx + shake[0], ccy + shake[1], ct, radius=115)
+            draw_swirl_cloud(draw, ccx + shake[0], ccy + shake[1], ct * 1.3 + 5, radius=85)
+
+    for fx in extra_fx:
+        if fx[0] == 'burst':
+            _, bx, by, text, bscale = fx
+            draw_impact_burst(draw, bx + shake[0], by + shake[1], text, burst_font, scale=bscale)
 
     # --- text overlays ----------------------------------------------------
     if title_alpha > 0.02:

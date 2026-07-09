@@ -162,6 +162,13 @@ def sfx_footstep_pat(vol=0.12):
     return noise_burst(0.05, vol=vol, lowpass=800)
 
 
+def sfx_punch(vol=0.28):
+    clip = np.zeros(int(SR * 0.14))
+    mix_at(clip, tone(150, 0.09, shape="square", vol=vol), 0.0)
+    mix_at(clip, noise_burst(0.07, vol=vol * 0.7, lowpass=650), 0.0)
+    return clip
+
+
 def build_soundtrack():
     track = np.zeros(int(SR * TOTAL_DURATION) + SR)
 
@@ -196,11 +203,17 @@ def build_soundtrack():
     mix_at(track, sfx_twinkle(0.2), 21.6)
     mix_at(track, sfx_twinkle(0.18), 22.9)
 
-    # 24-30 chase: kazoo riff + patters
-    mix_at(track, sfx_kazoo_riff(0.2), 24.1)
-    mix_at(track, sfx_kazoo_riff(0.18), 26.6)
-    for i in range(16):
-        mix_at(track, sfx_footstep_pat(0.08), 24.2 + i * 0.36)
+    # 24-30 round two: pounce, scuffle punches, dizzy separation
+    mix_at(track, sfx_boing(0.26), 24.1)  # pounce takeoff
+    mix_at(track, sfx_crash(0.24), 25.05)  # both land / collide
+    for btime in [0.28, 0.37, 0.47, 0.56, 0.65, 0.74, 0.82]:
+        mix_at(track, sfx_punch(0.24), 24.0 + btime * 6.0)
+    mix_at(track, sfx_bark(0.16), 25.4)
+    mix_at(track, sfx_meow(0.16), 26.1)
+    mix_at(track, sfx_bark(0.14), 27.3)
+    mix_at(track, sfx_meow(0.14), 28.1)
+    mix_at(track, sfx_boing_down(0.22), 29.05)  # burst apart
+    mix_at(track, sfx_twinkle(0.16), 29.3)
 
     # 30-35 the draw: deflate + pant tones
     mix_at(track, sfx_deflate(0.22), 30.1)

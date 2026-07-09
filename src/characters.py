@@ -23,7 +23,7 @@ def draw_dog(draw, cx, cy, scale=1.0, facing=1, leg_phase=0.0, mouth_open=0.0,
     leans away from facing direction while head/mouth stays forward.
     """
     s = scale
-    body_w, body_h = (150 + 70 * stretch) * s, 78 * s * (1.0 / (1 + stretch * 0.3))
+    body_w, body_h = (150 + 70 * stretch) * s, 78 * s * (1.0 / (1 + stretch * 0.3)) * squash
     bx = cx - facing * stretch * 40 * s
 
     # paws (2, front + back, alternating bounce)
@@ -94,7 +94,7 @@ def draw_cat(draw, cx, cy, scale=1.0, facing=1, leg_phase=0.0, tilt=0.0,
     """Draw Whiskers the cat centered near (cx, cy) -- chibi proportions
     (oversized head, small body, big sparkly eyes) for extra cuteness."""
     s = scale
-    body_w, body_h = (100 + 50 * stretch) * s, 54 * s * (1.0 / (1 + stretch * 0.3))
+    body_w, body_h = (100 + 50 * stretch) * s, 54 * s * (1.0 / (1 + stretch * 0.3)) * squash
     bx = cx - facing * stretch * 30 * s
 
     # paws (2, front + back, alternating bounce)

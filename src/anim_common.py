@@ -224,6 +224,38 @@ def draw_paw_print(draw, cx, cy, r=14, color=(255, 221, 74)):
         draw.ellipse([cx + dx - rr, cy + dy - rr, cx + dx + rr, cy + dy + rr], fill=color)
 
 
+def jump_lift(local_t, height):
+    """Parabolic jump arc: 0 at local_t=0/1 (ground), `height` at local_t=0.5 (apex)."""
+    lt = clamp01(local_t)
+    return height * 4 * lt * (1 - lt)
+
+
+def draw_swirl_cloud(draw, cx, cy, t, radius=100, n=6, color=(238, 238, 235, 145)):
+    """Rotating overlapping puffs -- the classic cartoon scuffle dust ball."""
+    for i in range(n):
+        a = t * 5.2 + i * (2 * math.pi / n)
+        r = radius * 0.45 + radius * 0.4 * math.sin(t * 3.3 + i * 1.7)
+        x = cx + math.cos(a) * r
+        y = cy + math.sin(a) * r * 0.55
+        rr = radius * 0.34
+        draw.ellipse([x - rr, y - rr, x + rr, y + rr], fill=color)
+
+
+def draw_impact_burst(draw, cx, cy, text, f, scale=1.0, color=(255, 221, 74)):
+    """Comic-book jagged starburst with punch text ('POW!', 'BAM!', ...)."""
+    if scale <= 0.02:
+        return
+    n = 9
+    pts = []
+    for i in range(2 * n):
+        ang = i * math.pi / n
+        r = (46 if i % 2 == 0 else 21) * scale
+        pts.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
+    draw.polygon(pts, fill=color, outline=INK)
+    if scale > 0.6:
+        text_center(draw, cx, cy, text, f, fill=INK)
+
+
 def draw_squeak(draw, x, y, t):
     """Little musical squiggle to indicate a toy squeak."""
     pts = []
