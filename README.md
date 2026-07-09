@@ -39,12 +39,24 @@ card), tighter scene pacing, 1080x1920.
 - **YouTube title/description/tags:** `youtube_metadata_shorts.md`
 - **Rebuild:** `./build_shorts.sh`
 
+## 4. "Best Friends on a Walk" — real footage edit (10.9s, vertical)
+
+Not animated — a real-footage edit built from a user-supplied stock
+clip (three dogs walking a field). Normal-speed open with a branded
+title overlay, a 2x slow-motion punch-in replay of the highlight, and
+a matching end card, scored with an original synthesized soundtrack.
+
+- **Final video:** `out/best_friends_on_a_walk.mp4` (1080x1920, 30fps, H.264/AAC)
+- **YouTube title/description/tags:** `youtube_metadata_realfootage.md`
+- **Rebuild:** `./build_realfootage.sh` (requires the source clip in `footage/`, which is git-ignored — see that file's Notes section)
+
 ## Rebuild from source
 
 ```bash
-./build.sh          # Funny Fights
-./build_bff.sh      # Best Friends (landscape)
-./build_shorts.sh   # Best Friends (vertical Short)
+./build.sh              # Funny Fights
+./build_bff.sh          # Best Friends (landscape)
+./build_shorts.sh       # Best Friends (vertical Short)
+./build_realfootage.sh  # Best Friends on a Walk (real footage)
 ```
 
 Each script renders the animation frames, synthesizes the soundtrack,
