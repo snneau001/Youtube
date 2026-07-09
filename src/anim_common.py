@@ -39,6 +39,31 @@ WHITE = (255, 255, 255)
 BLACK = (30, 26, 24)
 INK = (40, 34, 30)
 
+# "Best Friends" video palette -- white dog/cat + outdoor yard scene
+DOG_FUR_WHITE = (252, 249, 244)
+DOG_FUR_WHITE_DARK = (222, 214, 202)
+DOG_EAR_WHITE = (235, 224, 208)
+DOG_SNOUT_WHITE = (255, 240, 232)
+DOG_COLLAR = (219, 92, 78)
+CAT_FUR_WHITE = (255, 255, 255)
+CAT_FUR_WHITE_DARK = (226, 226, 232)
+CAT_EAR_INNER_WHITE = (250, 210, 218)
+CAT_BOW = (86, 140, 219)
+
+YARD_SKY_TOP = (137, 199, 232)
+YARD_SKY_BOTTOM = (206, 233, 245)
+GRASS = (140, 197, 104)
+GRASS_DARK = (117, 176, 84)
+TREE_TRUNK = (140, 96, 61)
+TREE_LEAVES = (86, 163, 96)
+TREE_LEAVES_DARK = (66, 140, 78)
+FENCE = (223, 200, 165)
+FENCE_DARK = (196, 170, 135)
+SUN = (255, 226, 128)
+BOWL_COLOR = (219, 130, 84)
+BOWL_DARK = (185, 100, 60)
+KIBBLE = (200, 140, 80)
+
 
 def lerp(a, b, t):
     return a + (b - a) * t
@@ -181,6 +206,62 @@ def draw_plant_pot(draw, x, y, tilt=0.0, on_head=False, scale=1.0):
         for dx, dy, r in [(-16, -4, 16), (2, -14, 18), (16, -2, 15)]:
             px, py = rot(dx, dy)
             draw.ellipse([px - r, py - r, px + r, py + r], fill=PLANT)
+
+
+def draw_yard_background(draw, shake=(0, 0)):
+    """Outdoor yard scene: sky, grassy ground, a tree, and a fence."""
+    sx, sy = shake
+    horizon = 230
+    for i in range(horizon):
+        t = i / horizon
+        c = tuple(int(lerp(a, b, t)) for a, b in zip(YARD_SKY_TOP, YARD_SKY_BOTTOM))
+        draw.line([(0, i), (WIDTH, i)], fill=c)
+    draw.ellipse([WIDTH - 190 + sx, 40 + sy, WIDTH - 90 + sx, 140 + sy], fill=SUN)
+
+    draw.rectangle([0, horizon, WIDTH, HEIGHT], fill=GRASS)
+    for gx in range(-20, WIDTH + 20, 46):
+        gy = horizon + 26 + 18 * math.sin(gx * 0.05)
+        draw.line([(gx + sx, gy + sy), (gx + sx - 8, gy - 22 + sy)], fill=GRASS_DARK, width=5)
+
+    # fence along the horizon
+    for fx in range(-10, WIDTH + 40, 70):
+        draw.rounded_rectangle([fx + sx, horizon - 70 + sy, fx + 22 + sx, horizon + 20 + sy], radius=6, fill=FENCE, outline=FENCE_DARK, width=3)
+    draw.rectangle([0 + sx, horizon - 44 + sy, WIDTH + sx, horizon - 30 + sy], fill=FENCE_DARK)
+
+    # a friendly tree, back-left
+    tx, ty = 165 + sx, horizon + sy
+    draw.rectangle([tx - 16, ty - 90, tx + 16, ty + 10], fill=TREE_TRUNK)
+    for dx, dy, r in [(-38, -150, 62), (30, -160, 68), (0, -190, 58), (-10, -120, 50)]:
+        draw.ellipse([tx + dx - r, ty + dy - r, tx + dx + r, ty + dy + r], fill=TREE_LEAVES)
+    draw.ellipse([tx - 20 - 40, ty - 130 - 40, tx - 20 + 40, ty - 130 + 40], fill=TREE_LEAVES_DARK)
+
+    # low hedge, front-right (fun to hop over)
+    hx, hy = WIDTH - 210 + sx, horizon + 170 + sy
+    for i in range(5):
+        r = 34
+        draw.ellipse([hx + i * 32 - r, hy - r, hx + i * 32 + r, hy + r * 0.7], fill=TREE_LEAVES)
+    draw.ellipse([hx + 60 - 30, hy - 34, hx + 60 + 30, hy + 20], fill=TREE_LEAVES_DARK)
+
+    return hx + 60, hy - 40  # hedge jump-point anchor
+
+
+def draw_food_bowl(draw, x, y, scale=1.0, fill_level=1.0):
+    """A simple shared pet bowl with kibble; fill_level 0..1 (eaten down)."""
+    s = scale
+    w, h = 92 * s, 30 * s
+    ellipse_safe(draw, x - w / 2, y - h * 0.4, x + w / 2, y + h * 0.7, fill=BOWL_DARK)
+    ellipse_safe(draw, x - w / 2 + 6 * s, y - h * 0.55, x + w / 2 - 6 * s, y + h * 0.25, fill=BOWL_COLOR)
+    if fill_level > 0.02:
+        iw = (w - 22 * s) * min(1.0, fill_level)
+        ellipse_safe(draw, x - iw / 2, y - h * 0.45, x + iw / 2, y - h * 0.05, fill=KIBBLE)
+        for i in range(int(6 * fill_level) + 1):
+            kx = x - iw / 2 + (i * 37 % max(1, iw)) if iw > 0 else x
+            ky = y - h * 0.3 + 5 * math.sin(i * 1.7)
+            draw.ellipse([kx - 4 * s, ky - 4 * s, kx + 4 * s, ky + 4 * s], fill=_lighten_tuple(KIBBLE, -20))
+
+
+def _lighten_tuple(color, amount):
+    return tuple(max(0, min(255, c + amount)) for c in color)
 
 
 def draw_stars(draw, cx, cy, t, n=3, radius=34):
